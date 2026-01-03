@@ -2,7 +2,7 @@
 package analyzer
 
 import (
-	"github.com/ahmadro/tsgoast/ast"
+	"github.com/ahmadramadhannn/tsgoast/ast"
 )
 
 // Analyzer provides high-level AST analysis capabilities.

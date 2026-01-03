@@ -3,7 +3,7 @@ package analyzer
 import (
 	"strings"
 
-	"github.com/ahmadro/tsgoast/ast"
+	"github.com/ahmadramadhannn/tsgoast/ast"
 )
 
 // FindFunctions finds all function declarations in the AST.

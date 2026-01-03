@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ahmadro/tsgoast/ast"
+	"github.com/ahmadramadhannn/tsgoast/ast"
 	sitter "github.com/tree-sitter/go-tree-sitter"
 	typescript "github.com/tree-sitter/tree-sitter-typescript/bindings/go"
 )

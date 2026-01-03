@@ -1,7 +1,7 @@
 package analyzer
 
 import (
-	"github.com/ahmadro/tsgoast/ast"
+	"github.com/ahmadramadhannn/tsgoast/ast"
 )
 
 // FindExpressions finds all expression nodes in the AST.

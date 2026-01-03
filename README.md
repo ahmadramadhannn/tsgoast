@@ -14,7 +14,7 @@ A lightweight Go library for analyzing TypeScript Abstract Syntax Trees (AST) wi
 ## Installation
 
 ```bash
-go get github.com/ahmadro/tsgoast
+go get github.com/ahmadramadhannn/tsgoast
 ```
 
 **Note:** This library uses tree-sitter which requires CGO. Make sure you have a C compiler installed.
@@ -28,8 +28,8 @@ import (
     "fmt"
     "log"
 
-    "github.com/ahmadro/tsgoast"
-    "github.com/ahmadro/tsgoast/analyzer"
+    "github.com/ahmadramadhannn/tsgoast"
+    "github.com/ahmadramadhannn/tsgoast/analyzer"
 )
 
 func main() {
