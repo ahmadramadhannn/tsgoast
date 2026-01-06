@@ -87,6 +87,72 @@ if err != nil {
 }
 ```
 
+### Parsing with Typed Statements (NEW!)
+
+The library now supports parsing TypeScript into a typed statement tree:
+
+```go
+parser, err := tsgoast.New()
+if err != nil {
+    log.Fatal(err)
+}
+defer parser.Close()
+
+// Parse into a typed tree
+tree, err := parser.ParseTree([]byte(`
+    const x = 42;
+    
+    function greet(name: string) {
+        return "Hello, " + name;
+    }
+    
+    class Person {
+        constructor(public name: string) {}
+    }
+    
+    if (x > 0) {
+        console.log("positive");
+    }
+    
+    for (let i = 0; i < 10; i++) {
+        console.log(i);
+    }
+`))
+
+if err != nil {
+    log.Fatal(err)
+}
+
+// Iterate over typed statements
+for _, stmt := range tree.Statements {
+    switch s := stmt.(type) {
+    case *ast.VariableStatement:
+        fmt.Printf("Variable declaration: %s\n", s.Kind)
+    case *ast.FunctionDeclaration:
+        fmt.Printf("Function: %s (async: %v, exported: %v)\n", 
+            s.Name, s.IsAsync, s.IsExported)
+    case *ast.ClassDeclaration:
+        fmt.Printf("Class: %s (abstract: %v)\n", s.Name, s.IsAbstract)
+    case *ast.IfStatement:
+        fmt.Println("If statement")
+    case *ast.ForStatement:
+        fmt.Println("For loop")
+    case *ast.ForOfStatement:
+        fmt.Printf("For-of loop (await: %v)\n", s.IsAwait)
+    case *ast.WhileStatement:
+        fmt.Println("While loop")
+    case *ast.SwitchStatement:
+        fmt.Println("Switch statement")
+    case *ast.TryStatement:
+        fmt.Println("Try-catch statement")
+    case *ast.ExportDeclaration:
+        fmt.Printf("Export (default: %v)\n", s.IsDefault)
+    }
+}
+```
+
+
+
 ### Finding Functions
 
 ```go
@@ -183,7 +249,14 @@ fmt.Printf("Async functions: %d\n", asyncCount)
 - `New() (*Parser, error)` - Create a new TypeScript parser
 - `Parse(source []byte) (*ast.BaseNode, error)` - Parse TypeScript source code
 - `ParseFile(path string) (*ast.BaseNode, error)` - Parse a TypeScript file
+- `ParseTree(source []byte) (*Tree, error)` - Parse into a typed statement tree (NEW!)
+- `ParseTreeFromFile(path string) (*Tree, error)` - Parse file into a typed statement tree (NEW!)
 - `Close()` - Release parser resources
+
+### Tree (NEW!)
+
+- `Root *ast.BaseNode` - The root AST node
+- `Statements []ast.Statement` - Typed statement list
 
 ### Analyzer
 
@@ -239,6 +312,43 @@ The library recognizes the following TypeScript constructs:
 - `NodeTypeLiteral` - Literal values
 - `NodeTypeProperty` - Properties
 - `NodeTypeParameter` - Parameters
+
+## Statement Types (NEW!)
+
+The library now provides typed statement nodes for more structured AST analysis:
+
+### Declarations
+
+- `VariableStatement` - Variable declarations (const, let, var)
+- `FunctionDeclaration` - Function declarations
+- `ClassDeclaration` - Class declarations
+- `EnumDeclaration` - Enum declarations
+- `ImportDeclaration` - Import statements
+- `ExportDeclaration` - Export statements
+- `NamespaceDeclaration` - Namespace declarations
+
+### Control Flow
+
+- `IfStatement` - If statements
+- `WhileStatement` - While loops
+- `ForStatement` - For loops
+- `ForInStatement` - For...in loops
+- `ForOfStatement` - For...of loops
+- `SwitchStatement` - Switch statements
+- `TryStatement` - Try-catch-finally statements
+
+### Other Statements
+
+- `ExpressionStatement` - Expression statements
+- `ReturnStatement` - Return statements
+- `ThrowStatement` - Throw statements
+- `BreakStatement` - Break statements
+- `ContinueStatement` - Continue statements
+- `BlockStatement` - Block statements
+- `EmptyStatement` - Empty statements
+- `LabeledStatement` - Labeled statements
+- `WithStatement` - With statements
+- `DebuggerStatement` - Debugger statements
 
 ## Testing
 
