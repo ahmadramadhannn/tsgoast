@@ -77,7 +77,8 @@ func main() {
 		}
 	`)
 
-	fmt.Println("=== Using New Tree API ===\n")
+	fmt.Println("=== Using New Tree API ===")
+	fmt.Println()
 
 	// Parse into typed tree
 	tree, err := parser.ParseTree(source)
@@ -144,7 +145,9 @@ func main() {
 		}
 	}
 
-	fmt.Println("\n=== Using Existing Analyzer API ===\n")
+	fmt.Println()
+	fmt.Println("=== Using Existing Analyzer API ===")
+	fmt.Println()
 
 	// You can still use the existing analyzer functions!
 	a := analyzer.New(tree.Root)
