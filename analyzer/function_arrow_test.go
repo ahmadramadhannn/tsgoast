@@ -32,6 +32,15 @@ func TestGetFunctionNameWithArrowFunctions(t *testing.T) {
 		const obj = {
 			method: () => 42
 		};
+
+		// Exported arrow functions
+		export const exportedArrow = () => {
+			return 100;
+		};
+
+		export const exportedAsync = async () => {
+			return await Promise.resolve(200);
+		};
 	`)
 
 	root, err := parser.Parse(source)
@@ -59,6 +68,30 @@ func TestGetFunctionNameWithArrowFunctions(t *testing.T) {
 			if name == "" {
 				t.Logf("  WARNING: Arrow function has no name extracted")
 			}
+		}
+	}
+
+	// Verify specific cases
+	expectedNames := map[string]bool{
+		"regularFunc":   false,
+		"arrowFunc":     false,
+		"namedArrow":    false,
+		"method":        false,
+		"exportedArrow": false,
+		"exportedAsync": false,
+	}
+
+	for _, fn := range functions {
+		name := GetFunctionName(fn)
+		if _, exists := expectedNames[name]; exists {
+			expectedNames[name] = true
+		}
+	}
+
+	// Check all expected names were found
+	for name, found := range expectedNames {
+		if !found {
+			t.Errorf("Expected to find function named '%s' but didn't", name)
 		}
 	}
 }
