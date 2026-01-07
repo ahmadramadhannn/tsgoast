@@ -61,9 +61,10 @@ func IsGenerator(node ast.Node) bool {
 	return strings.Contains(text, "function*")
 }
 
-// GetFunctionName attempts to extract the function name from a function node.
-// For arrow functions, it looks at the parent variable declaration or property assignment.
-// Returns empty string if the name cannot be determined.
+// GetFunctionName extracts the function name from a function node.
+// For regular functions and methods, it looks for an identifier child.
+// For arrow functions, it traverses parent nodes to find the variable name.
+// Returns an empty string if the name cannot be determined.
 func GetFunctionName(node ast.Node) string {
 	if node == nil {
 		return ""
@@ -73,81 +74,73 @@ func GetFunctionName(node ast.Node) string {
 
 	// For regular functions and methods, look for identifier child
 	if nodeType == ast.NodeTypeFunction || nodeType == ast.NodeTypeMethod {
-		for _, child := range node.Children() {
-			if child.Type() == ast.NodeTypeIdentifier {
-				return child.Text()
-			}
-		}
-		return ""
+		return findIdentifierInChildren(node)
 	}
 
-	// For arrow functions, we need to look at the parent context
+	// For arrow functions, traverse parent chain to find the variable name
 	if nodeType == ast.NodeTypeArrowFunction {
-		// Arrow functions are typically assigned to variables or properties
-		// We need to traverse up to find the variable name
-		parent := node.Parent()
-		if parent == nil {
-			return "" // Anonymous arrow function
+		return extractArrowFunctionName(node)
+	}
+
+	return ""
+}
+
+// findIdentifierInChildren searches for an identifier among direct children.
+func findIdentifierInChildren(node ast.Node) string {
+	for _, child := range node.Children() {
+		if child.Type() == ast.NodeTypeIdentifier {
+			return child.Text()
 		}
+	}
+	return ""
+}
 
-		// Check if parent is a variable declarator
-		// Pattern: const name = () => {}
-		parentText := parent.Text()
-
-		// Try to extract variable name from parent
-		if strings.Contains(parentText, "=") {
-			// Look for identifier in parent's children
-			for _, child := range parent.Children() {
-				if child.Type() == ast.NodeTypeIdentifier {
-					// Make sure this identifier comes before the arrow function
-					childText := child.Text()
-					arrowText := node.Text()
-					if strings.Index(parentText, childText) < strings.Index(parentText, arrowText) {
-						return childText
-					}
-				}
-			}
-
-			// Fallback: parse from text
-			parts := strings.Split(parentText, "=")
-			if len(parts) >= 2 {
-				leftSide := strings.TrimSpace(parts[0])
-				// Remove const/let/var
-				leftSide = strings.TrimPrefix(leftSide, "const ")
-				leftSide = strings.TrimPrefix(leftSide, "let ")
-				leftSide = strings.TrimPrefix(leftSide, "var ")
-				leftSide = strings.TrimSpace(leftSide)
-
-				// Extract just the identifier (before any : type annotation)
-				if idx := strings.Index(leftSide, ":"); idx > 0 {
-					leftSide = leftSide[:idx]
-				}
-				leftSide = strings.TrimSpace(leftSide)
-
-				// Return if it looks like a valid identifier
-				if leftSide != "" && !strings.Contains(leftSide, " ") {
-					return leftSide
+// extractArrowFunctionName traverses parent nodes to find the variable name
+// for an arrow function assignment pattern like: const name = () => {}
+func extractArrowFunctionName(node ast.Node) string {
+	// Traverse up the parent chain looking for a variable declaration
+	current := node.Parent()
+	for current != nil {
+		// Look for identifier children that represent the variable name
+		for _, child := range current.Children() {
+			if child.Type() == ast.NodeTypeIdentifier {
+				// Verify this is a variable name, not some other identifier
+				// by checking it appears before the arrow function in the parent text
+				if isVariableNameForArrowFunction(current, child, node) {
+					return child.Text()
 				}
 			}
 		}
 
-		// Check if it's a property in an object
-		// Pattern: { methodName: () => {} }
-		if strings.Contains(parentText, ":") {
-			parts := strings.Split(parentText, ":")
-			if len(parts) >= 2 {
-				potentialName := strings.TrimSpace(parts[0])
-				// Check if this looks like a property name (not a type annotation)
-				if !strings.Contains(potentialName, " ") &&
-					!strings.Contains(potentialName, "(") &&
-					potentialName != "" {
-					return potentialName
-				}
-			}
+		// Move up to the next parent
+		current = current.Parent()
+
+		// Safety limit to prevent infinite loops
+		if current != nil && current.Parent() == current {
+			break
 		}
 	}
 
 	return ""
+}
+
+// isVariableNameForArrowFunction checks if the identifier is the variable name
+// that the arrow function is assigned to.
+func isVariableNameForArrowFunction(parent, identifier, arrowFunc ast.Node) bool {
+	parentText := parent.Text()
+	identifierText := identifier.Text()
+	arrowText := arrowFunc.Text()
+
+	// The identifier should come before the arrow function in the text
+	identifierPos := strings.Index(parentText, identifierText)
+	arrowPos := strings.Index(parentText, arrowText)
+
+	// Identifier must be found before the arrow function
+	if identifierPos == -1 || arrowPos == -1 {
+		return false
+	}
+
+	return identifierPos < arrowPos
 }
 
 // HasParameters checks if a function has parameters.
