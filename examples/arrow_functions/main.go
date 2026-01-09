@@ -59,6 +59,7 @@ func main() {
 		nodeType := fn.Type()
 
 		fmt.Printf("%d. %s\n", i+1, name)
+		fmt.Printf("   Exported: %v\n", analyzer.IsExported(fn))
 		fmt.Printf("   Type: %v\n", nodeType)
 		fmt.Printf("   Async: %v\n", isAsync)
 		fmt.Println()
