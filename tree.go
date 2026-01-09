@@ -392,9 +392,7 @@ func (p *Parser) extractClassName(node *ast.BaseNode) string {
 		text = strings.TrimPrefix(text, "abstract ")
 		text = strings.TrimSpace(text)
 	}
-	if strings.HasPrefix(text, "class ") {
-		text = strings.TrimPrefix(text, "class ")
-	}
+	text = strings.TrimPrefix(text, "class ")
 	text = strings.TrimSpace(text)
 
 	// Extract name before { or extends or implements

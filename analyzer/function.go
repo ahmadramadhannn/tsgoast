@@ -36,14 +36,36 @@ func IsAsync(node ast.Node) bool {
 }
 
 // IsExported checks if a function node is exported.
-// This is a simplified check based on the node's text content.
+// It checks the node itself and its ancestors for "export" keywords.
 func IsExported(node ast.Node) bool {
 	if node == nil {
 		return false
 	}
 
-	text := node.Text()
-	return strings.HasPrefix(strings.TrimSpace(text), "export ")
+	// Helper to check if a node text indicates export
+	isExportNode := func(n ast.Node) bool {
+		text := strings.TrimSpace(n.Text())
+		return strings.HasPrefix(text, "export ")
+	}
+
+	// Check the node itself
+	if isExportNode(node) {
+		return true
+	}
+
+	// Traverse up the parent chain (up to 3 levels is usually enough)
+	// Level 1: Parent (e.g. export_statement for function declaration)
+	// Level 2: Grandparent (e.g. lexical_declaration for arrow function)
+	// Level 3: Great-grandparent (e.g. export_statement for arrow function)
+	current := node.Parent()
+	for i := 0; i < 3 && current != nil; i++ {
+		if isExportNode(current) {
+			return true
+		}
+		current = current.Parent()
+	}
+
+	return false
 }
 
 // IsGenerator checks if a function node is a generator function.

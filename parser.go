@@ -82,7 +82,11 @@ func (p *Parser) convertNode(node *sitter.Node, source []byte, parent *ast.BaseN
 				Offset: uint32(node.EndByte()),
 			},
 		},
-		ParentNode: parent,
+		ParentNode: nil,
+	}
+
+	if parent != nil {
+		baseNode.ParentNode = parent
 	}
 
 	// Convert children
