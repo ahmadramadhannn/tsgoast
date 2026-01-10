@@ -6,6 +6,15 @@ import (
 	"github.com/ahmadramadhannn/tsgoast/ast"
 )
 
+const (
+	// maxParentTraversalDepth is the maximum number of parent levels to check
+	// when determining if a node is exported. This covers most common cases:
+	// Level 1: export_statement for function declarations
+	// Level 2: lexical_declaration for arrow functions
+	// Level 3: export_statement wrapping lexical_declaration
+	maxParentTraversalDepth = 3
+)
+
 // FindFunctions finds all function declarations in the AST.
 func (a *Analyzer) FindFunctions() []ast.Node {
 	return a.FindNodes(func(node ast.Node) bool {
@@ -53,12 +62,12 @@ func IsExported(node ast.Node) bool {
 		return true
 	}
 
-	// Traverse up the parent chain (up to 3 levels is usually enough)
+	// Traverse up the parent chain (up to maxParentTraversalDepth levels)
 	// Level 1: Parent (e.g. export_statement for function declaration)
 	// Level 2: Grandparent (e.g. lexical_declaration for arrow function)
 	// Level 3: Great-grandparent (e.g. export_statement for arrow function)
 	current := node.Parent()
-	for i := 0; i < 3 && current != nil; i++ {
+	for i := 0; i < maxParentTraversalDepth && current != nil; i++ {
 		if isExportNode(current) {
 			return true
 		}

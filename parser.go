@@ -107,55 +107,56 @@ func (p *Parser) convertNode(node *sitter.Node, source []byte, parent *ast.BaseN
 	return baseNode
 }
 
+// nodeTypeMap maps tree-sitter node types to our AST node types.
+var nodeTypeMap = map[string]ast.NodeType{
+	"function_declaration":   ast.NodeTypeFunction,
+	"arrow_function":         ast.NodeTypeArrowFunction,
+	"method_definition":      ast.NodeTypeMethod,
+	"interface_declaration":  ast.NodeTypeInterface,
+	"type_alias_declaration": ast.NodeTypeTypeAlias,
+	"identifier":             ast.NodeTypeIdentifier,
+	"property_signature":     ast.NodeTypeProperty,
+	"formal_parameters":      ast.NodeTypeParameter,
+	"required_parameter":     ast.NodeTypeParameter,
+	"optional_parameter":     ast.NodeTypeParameter,
+	"string":                 ast.NodeTypeLiteral,
+	"number":                 ast.NodeTypeLiteral,
+	"true":                   ast.NodeTypeLiteral,
+	"false":                  ast.NodeTypeLiteral,
+	"null":                   ast.NodeTypeLiteral,
+	"undefined":              ast.NodeTypeLiteral,
+}
+
+// expressionTypes is a set of tree-sitter node types that represent expressions.
+var expressionTypes = map[string]bool{
+	"binary_expression":     true,
+	"unary_expression":      true,
+	"call_expression":       true,
+	"member_expression":     true,
+	"assignment_expression": true,
+	"ternary_expression":    true,
+	"new_expression":        true,
+	"await_expression":      true,
+}
+
 // mapNodeType maps tree-sitter node types to our AST node types.
 func (p *Parser) mapNodeType(tsType string) ast.NodeType {
-	switch tsType {
-	case "function_declaration":
-		return ast.NodeTypeFunction
-	case "arrow_function":
-		return ast.NodeTypeArrowFunction
-	case "method_definition":
-		return ast.NodeTypeMethod
-	case "interface_declaration":
-		return ast.NodeTypeInterface
-	case "type_alias_declaration":
-		return ast.NodeTypeTypeAlias
-	case "identifier":
-		return ast.NodeTypeIdentifier
-	case "property_signature":
-		return ast.NodeTypeProperty
-	case "formal_parameters", "required_parameter", "optional_parameter":
-		return ast.NodeTypeParameter
-	case "string", "number", "true", "false", "null", "undefined":
-		return ast.NodeTypeLiteral
-	default:
-		// Check if it's an expression type
-		if isExpressionType(tsType) {
-			return ast.NodeTypeExpression
-		}
-		return ast.NodeTypeUnknown
+	// Check direct mapping first
+	if nodeType, ok := nodeTypeMap[tsType]; ok {
+		return nodeType
 	}
+
+	// Check if it's an expression type
+	if expressionTypes[tsType] {
+		return ast.NodeTypeExpression
+	}
+
+	return ast.NodeTypeUnknown
 }
 
 // isExpressionType checks if a tree-sitter type is an expression.
 func isExpressionType(tsType string) bool {
-	expressionTypes := []string{
-		"binary_expression",
-		"unary_expression",
-		"call_expression",
-		"member_expression",
-		"assignment_expression",
-		"ternary_expression",
-		"new_expression",
-		"await_expression",
-	}
-
-	for _, et := range expressionTypes {
-		if tsType == et {
-			return true
-		}
-	}
-	return false
+	return expressionTypes[tsType]
 }
 
 // Close releases resources held by the parser.
